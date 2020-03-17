@@ -1,5 +1,5 @@
 import tensorflow.keras
-from tensorflow.keras.datasets import cifar10
+from tensorflow.keras.datasets import mnist
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten
@@ -9,7 +9,7 @@ import numpy as np
 from tensorflow.keras import backend as K
 from tensorflow.keras import regularizers
 
-class cifar10vgg:
+class mnistcnn:
     def __init__(self,train=True):
         self.num_classes = 10
         self.weight_decay = 0.0005
@@ -19,7 +19,7 @@ class cifar10vgg:
         if train:
             self.model = self.train(self.model)
         else:
-            self.model.load_weights('weights/cifar10vgg.h5')
+            self.model.load_weights('weights/mnistcnn.h5')
 
 
     def build_model(self):
@@ -129,7 +129,7 @@ class cifar10vgg:
         # Input: X - a training set
         # Output X - a normalized training set according to normalization constants.
 
-        #these values produced during first training and are general for the standard cifar10 training set normalization
+        #these values produced during first training and are general for the standard mnist training set normalization
         mean = 120.707
         std = 64.15
         return (x-mean)/(std+1e-7)
@@ -148,7 +148,7 @@ class cifar10vgg:
         lr_decay = 1e-6
         lr_drop = 20
         # The data, shuffled and split between train and test sets:
-        (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+        (x_train, y_train), (x_test, y_test) = mnist.load_data()
         x_train = x_train.astype('float32')
         x_test = x_test.astype('float32')
         x_train, x_test = self.normalize(x_train, x_test)
@@ -189,5 +189,5 @@ class cifar10vgg:
                             steps_per_epoch=x_train.shape[0] // batch_size,
                             epochs=maxepoches,
                             validation_data=(x_test, y_test),callbacks=[reduce_lr],verbose=1)
-        model.save_weights('cifar10vgg.h5')
+        model.save_weights('mnistcnn.h5')
         return model

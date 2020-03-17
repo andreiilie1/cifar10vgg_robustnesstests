@@ -188,6 +188,6 @@ class cifar10vgg:
                                          batch_size=batch_size),
                             steps_per_epoch=x_train.shape[0] // batch_size,
                             epochs=maxepoches,
-                            validation_data=(x_test, y_test),callbacks=[reduce_lr],verbose=2)
+                            validation_data=(x_test, y_test),callbacks=[reduce_lr],verbose=1)
         model.save_weights('cifar10vgg.h5')
         return model
