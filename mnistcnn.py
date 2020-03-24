@@ -1,4 +1,5 @@
 import tensorflow.keras
+import tensorflow as tf
 from tensorflow.keras.datasets import mnist
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import Sequential
@@ -13,7 +14,7 @@ class mnistcnn:
     def __init__(self,train=True):
         self.num_classes = 10
         self.weight_decay = 0.0005
-        self.x_shape = [32,32,3]
+        self.x_shape = [28,28,1]
 
         self.model = self.build_model()
         if train:
@@ -28,82 +29,34 @@ class mnistcnn:
         model = Sequential()
         weight_decay = self.weight_decay
 
-        model.add(Conv2D(64, (3, 3), padding='same',
+        model.add(Conv2D(8, (3, 3), padding='same',
                          input_shape=self.x_shape,kernel_regularizer=regularizers.l2(weight_decay)))
         model.add(Activation('relu'))
         model.add(BatchNormalization())
         model.add(Dropout(0.3))
 
-        model.add(Conv2D(64, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
+        model.add(Conv2D(8, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
         model.add(Activation('relu'))
         model.add(BatchNormalization())
 
         model.add(MaxPooling2D(pool_size=(2, 2)))
 
-        model.add(Conv2D(128, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(Dropout(0.4))
+#         model.add(Conv2D(16, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
+#         model.add(Activation('relu'))
+#         model.add(BatchNormalization())
+#         model.add(Dropout(0.4))
 
-        model.add(Conv2D(128, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
+#         model.add(Conv2D(16, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
+#         model.add(Activation('relu'))
+#         model.add(BatchNormalization())
 
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-
-        model.add(Conv2D(256, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(Dropout(0.4))
-
-        model.add(Conv2D(256, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(Dropout(0.4))
-
-        model.add(Conv2D(256, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-
-        model.add(MaxPooling2D(pool_size=(2, 2)))
+#         model.add(MaxPooling2D(pool_size=(2, 2)))
 
 
-        model.add(Conv2D(512, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(Dropout(0.4))
-
-        model.add(Conv2D(512, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(Dropout(0.4))
-
-        model.add(Conv2D(512, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-
-
-        model.add(Conv2D(512, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(Dropout(0.4))
-
-        model.add(Conv2D(512, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(Dropout(0.4))
-
-        model.add(Conv2D(512, (3, 3), padding='same',kernel_regularizer=regularizers.l2(weight_decay)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.5))
+#         model.add(Dropout(0.5))
 
         model.add(Flatten())
-        model.add(Dense(512,kernel_regularizer=regularizers.l2(weight_decay)))
+        model.add(Dense(16,kernel_regularizer=regularizers.l2(weight_decay)))
         model.add(Activation('relu'))
         model.add(BatchNormalization())
 
@@ -118,10 +71,12 @@ class mnistcnn:
         # it is used when training a model.
         # Input: training set and test set
         # Output: normalized training set and test set according to the trianing set statistics.
-        mean = np.mean(X_train,axis=(0,1,2,3))
-        std = np.std(X_train, axis=(0, 1, 2, 3))
+        mean = np.mean(X_train,axis=(0, 1, 2))
+        std = np.std(X_train, axis=(0, 1, 2))
         X_train = (X_train-mean)/(std+1e-7)
         X_test = (X_test-mean)/(std+1e-7)
+        X_train = tf.expand_dims(X_train, 3)
+        X_test = tf.expand_dims(X_test, 3)
         return X_train, X_test
 
     def normalize_production(self,x):
@@ -130,8 +85,8 @@ class mnistcnn:
         # Output X - a normalized training set according to normalization constants.
 
         #these values produced during first training and are general for the standard mnist training set normalization
-        mean = 120.707
-        std = 64.15
+        mean = 0
+        std = 250
         return (x-mean)/(std+1e-7)
 
     def predict(self,x,normalize=True,batch_size=50):
@@ -143,7 +98,7 @@ class mnistcnn:
 
         #training parameters
         batch_size = 128
-        maxepoches = 250
+        maxepoches = 32
         learning_rate = 0.1
         lr_decay = 1e-6
         lr_drop = 20
@@ -156,24 +111,24 @@ class mnistcnn:
         y_train = tensorflow.keras.utils.to_categorical(y_train, self.num_classes)
         y_test = tensorflow.keras.utils.to_categorical(y_test, self.num_classes)
 
-        def lr_scheduler(epoch):
-            return learning_rate * (0.5 ** (epoch // lr_drop))
-        reduce_lr = tensorflow.keras.callbacks.LearningRateScheduler(lr_scheduler)
+#         def lr_scheduler(epoch):
+#             return learning_rate * (0.5 ** (epoch // lr_drop))
+#         reduce_lr = tensorflow.keras.callbacks.LearningRateScheduler(lr_scheduler)
 
-        #data augmentation
-        datagen = ImageDataGenerator(
-            featurewise_center=False,  # set input mean to 0 over the dataset
-            samplewise_center=False,  # set each sample mean to 0
-            featurewise_std_normalization=False,  # divide inputs by std of the dataset
-            samplewise_std_normalization=False,  # divide each input by its std
-            zca_whitening=False,  # apply ZCA whitening
-            rotation_range=15,  # randomly rotate images in the range (degrees, 0 to 180)
-            width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
-            height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
-            horizontal_flip=True,  # randomly flip images
-            vertical_flip=False)  # randomly flip images
-        # (std, mean, and principal components if ZCA whitening is applied).
-        datagen.fit(x_train)
+#         #data augmentation
+#         datagen = ImageDataGenerator(
+#             featurewise_center=False,  # set input mean to 0 over the dataset
+#             samplewise_center=False,  # set each sample mean to 0
+#             featurewise_std_normalization=False,  # divide inputs by std of the dataset
+#             samplewise_std_normalization=False,  # divide each input by its std
+#             zca_whitening=False,  # apply ZCA whitening
+#             rotation_range=15,  # randomly rotate images in the range (degrees, 0 to 180)
+#             width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
+#             height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
+#             horizontal_flip=True,  # randomly flip images
+#             vertical_flip=False)  # randomly flip images
+#         # (std, mean, and principal components if ZCA whitening is applied).
+#         datagen.fit(x_train)
 
 
 
@@ -184,10 +139,13 @@ class mnistcnn:
 
         # training process in a for loop with learning rate drop every 25 epoches.
 
-        historytemp = model.fit_generator(datagen.flow(x_train, y_train,
-                                         batch_size=batch_size),
-                            steps_per_epoch=x_train.shape[0] // batch_size,
-                            epochs=maxepoches,
-                            validation_data=(x_test, y_test),callbacks=[reduce_lr],verbose=1)
+        historytemp = model.fit(x_train, 
+                                y_train, 
+                                batch_size=batch_size,
+                                steps_per_epoch = np.shape(x_train)[0],
+                                epochs=maxepoches,
+#                                 validation_data=(x_test, y_test),
+#                                 callbacks=[reduce_lr],
+                                verbose=1)
         model.save_weights('mnistcnn.h5')
         return model
