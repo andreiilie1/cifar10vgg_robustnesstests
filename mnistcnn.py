@@ -98,7 +98,7 @@ class mnistcnn:
 
         #training parameters
         batch_size = 128
-        maxepoches = 32
+        maxepoches = 16
         learning_rate = 0.1
         lr_decay = 1e-6
         lr_drop = 20
@@ -111,9 +111,9 @@ class mnistcnn:
         y_train = tensorflow.keras.utils.to_categorical(y_train, self.num_classes)
         y_test = tensorflow.keras.utils.to_categorical(y_test, self.num_classes)
 
-#         def lr_scheduler(epoch):
-#             return learning_rate * (0.5 ** (epoch // lr_drop))
-#         reduce_lr = tensorflow.keras.callbacks.LearningRateScheduler(lr_scheduler)
+        def lr_scheduler(epoch):
+            return learning_rate * (0.5 ** (epoch // lr_drop))
+        reduce_lr = tensorflow.keras.callbacks.LearningRateScheduler(lr_scheduler)
 
 #         #data augmentation
 #         datagen = ImageDataGenerator(
@@ -134,7 +134,7 @@ class mnistcnn:
 
         #optimization details
         sgd = optimizers.SGD(lr=learning_rate, decay=lr_decay, momentum=0.9, nesterov=True)
-        model.compile(loss='categorical_crossentropy', optimizer=sgd,metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy', optimizer=sgd,metrics=['acc'])
 
 
         # training process in a for loop with learning rate drop every 25 epoches.
@@ -142,10 +142,10 @@ class mnistcnn:
         historytemp = model.fit(x_train, 
                                 y_train, 
                                 batch_size=batch_size,
-                                steps_per_epoch = np.shape(x_train)[0],
+#                                 steps_per_epoch = np.shape(x_train)[0] // batch_size,
                                 epochs=maxepoches,
-#                                 validation_data=(x_test, y_test),
-#                                 callbacks=[reduce_lr],
+                                validation_data=(x_test, y_test),
+                                callbacks=[reduce_lr],
                                 verbose=1)
         model.save_weights('mnistcnn.h5')
         return model
