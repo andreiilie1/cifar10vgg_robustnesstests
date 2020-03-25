@@ -81,24 +81,31 @@ def check_noise_robustness(model, x_test, y_test, noise_type="gauss", args = {})
     return accuracy, agreements, noisy_imgs
 
 def check_noise_robustness_multiple_rounds(model, sample_x, sample_y, steps = 5, noise_type="gauss", verbose = True, args = {}):
-    # TODO: add early stopping if, after 3 rounds, empirical robustness decreased by only 0.5 % or so
+    # TODO: add early stopping if, after 3 rounds, empirical robustness decreased by only 0.05 % or so
     K = len(sample_x)
     robustness_progress = []
     saved_noisy_imgs = [[]] * K
     if verbose:
         print("Step", 0)
+#     print("X")
     accuracy, agreements, noisy_imgs = check_noise_robustness(model, sample_x, sample_y, noise_type, args)
+#     print("Y")
     robustness_progress.append(np.sum(agreements)/len(agreements))
     for i in range(K):
         if(agreements[i] == False and saved_noisy_imgs[i] == []):
             saved_noisy_imgs[i] = noisy_imgs[i]
+#     print("Z")
     for i in range(steps - 1):
+        print(i + 1, "/",steps)
         if verbose:
             clear_output(wait=True)
-            print("Step", i + 1)
+#             print("Step", i + 1)
+#             import pdb
+#             pdb.set_trace()
             print("Previous robustness: ",np.sum(agreements)/len(agreements))
-            plt.plot(robustness_progress)
-            plt.show()
+#             print("Step", i + 1)
+#             plt.plot(robustness_progress)
+#             plt.show()
         accuracy_local, agreements_local, noisy_imgs_local = check_noise_robustness(model, sample_x, sample_y, noise_type, args)
         agreements = np.logical_and(agreements, agreements_local)
         robustness_progress.append(np.sum(agreements)/len(agreements))

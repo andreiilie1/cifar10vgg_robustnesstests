@@ -15,6 +15,9 @@ class mnistcnn:
         self.num_classes = 10
         self.weight_decay = 0.0005
         self.x_shape = [28,28,1]
+        
+        self.mean = 0
+        self.std = 250
 
         self.model = self.build_model()
         if train:
@@ -73,6 +76,10 @@ class mnistcnn:
         # Output: normalized training set and test set according to the trianing set statistics.
         mean = np.mean(X_train,axis=(0, 1, 2))
         std = np.std(X_train, axis=(0, 1, 2))
+        
+        self.mean = mean
+        self.std = std
+        
         X_train = (X_train-mean)/(std+1e-7)
         X_test = (X_test-mean)/(std+1e-7)
         X_train = tf.expand_dims(X_train, 3)
@@ -85,8 +92,8 @@ class mnistcnn:
         # Output X - a normalized training set according to normalization constants.
 
         #these values produced during first training and are general for the standard mnist training set normalization
-        mean = 0
-        std = 250
+        mean = self.mean
+        std = self.std
         return (x-mean)/(std+1e-7)
 
     def predict(self,x,normalize=True,batch_size=50):
@@ -147,5 +154,5 @@ class mnistcnn:
                                 validation_data=(x_test, y_test),
                                 callbacks=[reduce_lr],
                                 verbose=1)
-        model.save_weights('mnistcnn.h5')
+        model.save_weights('weights/mnistcnn.h5')
         return model
