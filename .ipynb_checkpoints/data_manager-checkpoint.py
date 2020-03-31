@@ -1,15 +1,47 @@
-from tensorflow.keras.datasets import cifar10
+import tensorflow as tf
+from tensorflow.keras.datasets import cifar10, mnist
 import numpy as np
 import tensorflow.keras.utils
 
-def load_data(name = "cifar10"):
+def load_data(name = "mnist", filename_robust = "test.npz", filename_not_robust = "not_robust.npz"):
     if(name == "cifar10"):
+        num_classes = 10
         (x_train, y_train), (x_test, y_test) = cifar10.load_data()
         x_train = x_train.astype('float32')
         x_test = x_test.astype('float32')
 
-        y_train = tensorflow.keras.utils.to_categorical(y_train, 10)
-        y_test = tensorflow.keras.utils.to_categorical(y_test, 10)
+        y_train = tensorflow.keras.utils.to_categorical(y_train, num_classes)
+        y_test = tensorflow.keras.utils.to_categorical(y_test, num_classes)
+    elif(name == "mnist"):
+        num_classes = 10
+        (x_train, y_train), (x_test, y_test) = mnist.load_data()
+        x_train = x_train.astype('float32')
+        x_test = x_test.astype('float32')
+        x_train = tf.expand_dims(x_train, 3)
+        x_test = tf.expand_dims(x_test, 3)
+
+        y_train = tensorflow.keras.utils.to_categorical(y_train, num_classes)
+        y_test = tensorflow.keras.utils.to_categorical(y_test, num_classes)
+    elif(name == "mnist_robust"):
+        num_classes = 10
+        _, (x_test, y_test) = mnist.load_data()
+        npz = np.load(filename_robust)
+        
+        x_train = npz["arr_0"]
+        y_train = npz["arr_1"]
+        
+        x_test = tf.expand_dims(x_test, 3)
+        y_test = tensorflow.keras.utils.to_categorical(y_test, num_classes)
+    elif(name == "mnist_not_robust"):
+        num_classes = 10
+        _, (x_test, y_test) = mnist.load_data()
+        npz = np.load(filename_not_robust)
+        
+        x_train = npz["arr_0"]
+        y_train = npz["arr_1"]
+        
+        x_test = tf.expand_dims(x_test, 3)
+        y_test = tensorflow.keras.utils.to_categorical(y_test, num_classes)
     else:
         raise Exception("Invalid data name")
         

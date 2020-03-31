@@ -9,15 +9,22 @@ from tensorflow.keras import optimizers
 import numpy as np
 from tensorflow.keras import backend as K
 from tensorflow.keras import regularizers
+import data_manager
 
 class mnistcnn:
-    def __init__(self,train=True):
+    def __init__(self, train = True, data_name = "mnist_not_robust", maxepochs = 10):
         self.num_classes = 10
         self.weight_decay = 0.0005
         self.x_shape = [28,28,1]
+        self.maxepochs = maxepochs
         
-        self.mean = 0
-        self.std = 250
+#         self.mean = 33.318447
+#         self.std = 78.567444
+
+#         self.mean = 0.0
+#         self.std = 250.0
+        
+        self.data_name = data_name
 
         self.model = self.build_model()
         if train:
@@ -74,16 +81,18 @@ class mnistcnn:
         # it is used when training a model.
         # Input: training set and test set
         # Output: normalized training set and test set according to the trianing set statistics.
-        mean = np.mean(X_train,axis=(0, 1, 2))
-        std = np.std(X_train, axis=(0, 1, 2))
+#         mean = np.mean(X_train,axis=(0, 1, 2, 3))
+#         std = np.std(X_train, axis=(0, 1, 2, 3))
+        
+        mean = np.array([0.0])
+        std = np.array([250.0])
         
         self.mean = mean
         self.std = std
         
         X_train = (X_train-mean)/(std+1e-7)
         X_test = (X_test-mean)/(std+1e-7)
-        X_train = tf.expand_dims(X_train, 3)
-        X_test = tf.expand_dims(X_test, 3)
+
         return X_train, X_test
 
     def normalize_production(self,x):
@@ -105,18 +114,14 @@ class mnistcnn:
 
         #training parameters
         batch_size = 128
-        maxepoches = 16
+        maxepoches = self.maxepochs
         learning_rate = 0.1
         lr_decay = 1e-6
         lr_drop = 20
+        
         # The data, shuffled and split between train and test sets:
-        (x_train, y_train), (x_test, y_test) = mnist.load_data()
-        x_train = x_train.astype('float32')
-        x_test = x_test.astype('float32')
+        (x_train, y_train), (x_test, y_test) = data_manager.load_data(self.data_name)
         x_train, x_test = self.normalize(x_train, x_test)
-
-        y_train = tensorflow.keras.utils.to_categorical(y_train, self.num_classes)
-        y_test = tensorflow.keras.utils.to_categorical(y_test, self.num_classes)
 
         def lr_scheduler(epoch):
             return learning_rate * (0.5 ** (epoch // lr_drop))
@@ -142,6 +147,12 @@ class mnistcnn:
         #optimization details
         sgd = optimizers.SGD(lr=learning_rate, decay=lr_decay, momentum=0.9, nesterov=True)
         model.compile(loss='categorical_crossentropy', optimizer=sgd,metrics=['acc'])
+        
+        # early stopping
+        estop = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+                              min_delta=0,
+                              patience=0,
+                              verbose=0, mode='auto')
 
 
         # training process in a for loop with learning rate drop every 25 epoches.
@@ -152,7 +163,7 @@ class mnistcnn:
 #                                 steps_per_epoch = np.shape(x_train)[0] // batch_size,
                                 epochs=maxepoches,
                                 validation_data=(x_test, y_test),
-                                callbacks=[reduce_lr],
+                                callbacks=[reduce_lr, estop],
                                 verbose=1)
-        model.save_weights('weights/mnistcnn.h5')
+        model.save_weights('weights/mnistcnn_test.h5')
         return model
