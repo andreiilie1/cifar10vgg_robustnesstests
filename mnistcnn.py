@@ -26,6 +26,7 @@ class mnistcnn:
         
         self.data_name = data_name
 
+
         self.model = self.build_model()
         if train:
             self.model = self.train(self.model)
@@ -86,6 +87,7 @@ class mnistcnn:
         
         mean = np.array([0.0])
         std = np.array([250.0])
+
         
         self.mean = mean
         self.std = std
@@ -121,6 +123,7 @@ class mnistcnn:
         
         # The data, shuffled and split between train and test sets:
         (x_train, y_train), (x_test, y_test) = data_manager.load_data(self.data_name)
+
         x_train, x_test = self.normalize(x_train, x_test)
 
         def lr_scheduler(epoch):
