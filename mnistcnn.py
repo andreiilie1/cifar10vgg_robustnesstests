@@ -9,6 +9,7 @@ from tensorflow.keras import optimizers
 import numpy as np
 from tensorflow.keras import backend as K
 from tensorflow.keras import regularizers
+import data_manager
 
 class mnistcnn:
     def __init__(self,train=True):
@@ -16,8 +17,8 @@ class mnistcnn:
         self.weight_decay = 0.0005
         self.x_shape = [28,28,1]
         
-        self.mean = 0
-        self.std = 250
+        self.mean = 33.318447
+        self.std = 78.567444
 
         self.model = self.build_model()
         if train:
@@ -74,16 +75,15 @@ class mnistcnn:
         # it is used when training a model.
         # Input: training set and test set
         # Output: normalized training set and test set according to the trianing set statistics.
-        mean = np.mean(X_train,axis=(0, 1, 2))
-        std = np.std(X_train, axis=(0, 1, 2))
+        mean = np.mean(X_train,axis=(0, 1, 2, 3))
+        std = np.std(X_train, axis=(0, 1, 2, 3))
         
         self.mean = mean
         self.std = std
         
         X_train = (X_train-mean)/(std+1e-7)
         X_test = (X_test-mean)/(std+1e-7)
-        X_train = tf.expand_dims(X_train, 3)
-        X_test = tf.expand_dims(X_test, 3)
+
         return X_train, X_test
 
     def normalize_production(self,x):
@@ -109,14 +109,10 @@ class mnistcnn:
         learning_rate = 0.1
         lr_decay = 1e-6
         lr_drop = 20
+        
         # The data, shuffled and split between train and test sets:
-        (x_train, y_train), (x_test, y_test) = mnist.load_data()
-        x_train = x_train.astype('float32')
-        x_test = x_test.astype('float32')
+        (x_train, y_train), (x_test, y_test) = data_manager.load_data("mnist")
         x_train, x_test = self.normalize(x_train, x_test)
-
-        y_train = tensorflow.keras.utils.to_categorical(y_train, self.num_classes)
-        y_test = tensorflow.keras.utils.to_categorical(y_test, self.num_classes)
 
         def lr_scheduler(epoch):
             return learning_rate * (0.5 ** (epoch // lr_drop))
@@ -154,5 +150,5 @@ class mnistcnn:
                                 validation_data=(x_test, y_test),
                                 callbacks=[reduce_lr],
                                 verbose=1)
-        model.save_weights('weights/mnistcnn.h5')
+        model.save_weights('weights/mnistcnn_test.h5')
         return model
