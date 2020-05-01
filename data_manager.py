@@ -42,6 +42,24 @@ def load_data(name = "mnist", filename_robust = "test.npz", filename_not_robust 
         
         x_test = tf.expand_dims(x_test, 3)
         y_test = tensorflow.keras.utils.to_categorical(y_test, num_classes)
+    elif(name == "ordered_robust_not_robust"):
+        num_classes = 10
+        _, (x_test, y_test) = mnist.load_data()
+        npz_robust = np.load(filename_robust)
+        
+        x_train_robust = npz_robust["arr_0"]
+        y_train_robust = npz_robust["arr_1"]
+        
+        npz_not_robust = np.load(filename_not_robust)
+        
+        x_train_not_robust = npz_not_robust["arr_0"]
+        y_train_not_robust = npz_not_robust["arr_1"]
+        
+        x_train = np.append(x_train_robust, x_train_not_robust, axis = 0)
+        y_train = np.append(y_train_robust, y_train_not_robust, axis = 0)
+        
+        x_test = tf.expand_dims(x_test, 3)
+        y_test = tensorflow.keras.utils.to_categorical(y_test, num_classes)
     else:
         raise Exception("Invalid data name")
         

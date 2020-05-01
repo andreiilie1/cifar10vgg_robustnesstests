@@ -12,11 +12,14 @@ from tensorflow.keras import regularizers
 import data_manager
 
 class mnistcnn:
-    def __init__(self, train = True, data_name = "mnist_not_robust", maxepochs = 10):
+    def __init__(self, train = True, data_name = "mnist_not_robust", maxepochs = 30, shuffle=True, in_memory_train_data = []):
         self.num_classes = 10
         self.weight_decay = 0.0005
         self.x_shape = [28,28,1]
         self.maxepochs = maxepochs
+        self.shuffle = shuffle
+        self.train_now = train
+        self.in_memory_train_data = in_memory_train_data
         
 #         self.mean = 33.318447
 #         self.std = 78.567444
@@ -31,7 +34,11 @@ class mnistcnn:
         if train:
             self.model = self.train(self.model)
         else:
-            self.model.load_weights('weights/mnistcnn.h5')
+            weights_path = "weights/mnistcnn_" + self.data_name + ".h5"
+            try:
+                self.model.load_weights(weights_path)
+            except:
+                print("No weights file at" + weights_path)
 
 
     def build_model(self):
@@ -85,8 +92,10 @@ class mnistcnn:
 #         mean = np.mean(X_train,axis=(0, 1, 2, 3))
 #         std = np.std(X_train, axis=(0, 1, 2, 3))
         
+    
+#     added hardcoded values for mean and std to skip normalization for the moment. we just bring pixels between 0 and 1
         mean = np.array([0.0])
-        std = np.array([250.0])
+        std = np.array([255.0])
 
         
         self.mean = mean
@@ -117,18 +126,27 @@ class mnistcnn:
         #training parameters
         batch_size = 128
         maxepoches = self.maxepochs
-        learning_rate = 0.1
-        lr_decay = 1e-6
-        lr_drop = 20
+#         learning_rate = 0.1
+#         lr_decay = 1e-6
+#         lr_drop = 20
         
         # The data, shuffled and split between train and test sets:
-        (x_train, y_train), (x_test, y_test) = data_manager.load_data(self.data_name)
+        if self.data_name == "custom":
+            assert(self.train_now == True)
+            _,(x_test, y_test) = data_manager.load_data("mnist")
+            (x_train, y_train) = self.in_memory_train_data
+            if(len(np.shape(x_train)) == 3):
+                x_train = tf.expand_dims(x_train, 3)
+            if(len(y_train[0]) != self.num_classes):
+                y_train = tensorflow.keras.utils.to_categorical(y_train, self.num_classes)
+        else:
+            (x_train, y_train), (x_test, y_test) = data_manager.load_data(self.data_name)
 
         x_train, x_test = self.normalize(x_train, x_test)
 
-        def lr_scheduler(epoch):
-            return learning_rate * (0.5 ** (epoch // lr_drop))
-        reduce_lr = tensorflow.keras.callbacks.LearningRateScheduler(lr_scheduler)
+#         def lr_scheduler(epoch):
+#             return learning_rate * (0.5 ** (epoch // lr_drop))
+#         reduce_lr = tensorflow.keras.callbacks.LearningRateScheduler(lr_scheduler)
 
 #         #data augmentation
 #         datagen = ImageDataGenerator(
@@ -148,8 +166,11 @@ class mnistcnn:
 
 
         #optimization details
-        sgd = optimizers.SGD(lr=learning_rate, decay=lr_decay, momentum=0.9, nesterov=True)
-        model.compile(loss='categorical_crossentropy', optimizer=sgd,metrics=['acc'])
+#         sgd = optimizers.SGD(lr=learning_rate, decay=lr_decay, momentum=0.9, nesterov=True)
+        
+        adam = optimizers.Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999, amsgrad=False)
+        
+        model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['acc'])
         
         # early stopping
         estop = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -161,12 +182,14 @@ class mnistcnn:
         # training process in a for loop with learning rate drop every 25 epoches.
 
         historytemp = model.fit(x_train, 
-                                y_train, 
+                                y_train,
+                                shuffle=self.shuffle,
                                 batch_size=batch_size,
 #                                 steps_per_epoch = np.shape(x_train)[0] // batch_size,
                                 epochs=maxepoches,
                                 validation_data=(x_test, y_test),
-                                callbacks=[reduce_lr, estop],
+                                callbacks=[estop],
                                 verbose=1)
-        model.save_weights('weights/mnistcnn_test.h5')
+        weights_path = "weights/mnistcnn_" + self.data_name + ".h5"
+        model.save_weights(weights_path)
         return model
