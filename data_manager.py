@@ -3,6 +3,7 @@ from tensorflow.keras.datasets import cifar10, mnist
 import numpy as np
 import tensorflow.keras.utils
 
+# test.npz and not_robust.npz were generated from train_mnist using 28 pixels perturbations (sqrt(number_pixels)), which were assigned random values
 def load_data(name = "mnist", filename_robust = "test.npz", filename_not_robust = "not_robust.npz"):
     if(name == "cifar10"):
         num_classes = 10

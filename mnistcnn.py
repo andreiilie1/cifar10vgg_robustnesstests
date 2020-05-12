@@ -24,8 +24,8 @@ class mnistcnn:
 #         self.mean = 33.318447
 #         self.std = 78.567444
 
-#         self.mean = 0.0
-#         self.std = 250.0
+        self.mean = np.array([0.0])
+        self.std = np.array([255.0])
         
         self.data_name = data_name
 
@@ -94,12 +94,15 @@ class mnistcnn:
         
     
 #     added hardcoded values for mean and std to skip normalization for the moment. we just bring pixels between 0 and 1
-        mean = np.array([0.0])
-        std = np.array([255.0])
+#         mean = np.array([0.0])
+#         std = np.array([255.0])
 
         
-        self.mean = mean
-        self.std = std
+#         self.mean = mean
+#         self.std = std
+
+        mean = self.mean
+        std = self.std
         
         X_train = (X_train-mean)/(std+1e-7)
         X_test = (X_test-mean)/(std+1e-7)
